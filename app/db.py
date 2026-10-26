@@ -39,8 +39,56 @@ def init_db(db_path: Path) -> None:
                 fecha_entrega TEXT NOT NULL,
                 completada INTEGER NOT NULL DEFAULT 0 CHECK (completada IN (0, 1))
             );
+            CREATE TABLE IF NOT EXISTS constancias_recordatorio (
+                tarea_id INTEGER NOT NULL REFERENCES tareas(id),
+                dia_local TEXT NOT NULL,
+                PRIMARY KEY (tarea_id, dia_local)
+            );
             """
         )
+
+
+def list_recordatorios(
+    db_path: Path, dia_local: str, fecha_entrega: str
+) -> list[dict]:
+    """Lista tareas elegibles que aún no tienen constancia para el día local."""
+    with connection(db_path) as database:
+        rows = database.execute(
+            """
+            SELECT t.id AS tarea_id, t.titulo, m.nombre AS materia, t.fecha_entrega
+            FROM tareas AS t
+            JOIN materias AS m ON m.id = t.materia_id
+            LEFT JOIN constancias_recordatorio AS c
+                ON c.tarea_id = t.id AND c.dia_local = ?
+            WHERE t.completada = 0 AND t.fecha_entrega = ? AND c.tarea_id IS NULL
+            ORDER BY t.id ASC
+            """,
+            (dia_local, fecha_entrega),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def mark_recordatorio(
+    db_path: Path, tarea_id: int, dia_local: str, fecha_entrega: str
+) -> bool | None:
+    """Registra atómicamente un aviso elegible. None indica que no existe la tarea."""
+    with connection(db_path) as database:
+        database.execute("BEGIN IMMEDIATE")
+        task = database.execute(
+            "SELECT completada, fecha_entrega FROM tareas WHERE id = ?", (tarea_id,)
+        ).fetchone()
+        if task is None:
+            return None
+        if task["completada"] or task["fecha_entrega"] != fecha_entrega:
+            return False
+        cursor = database.execute(
+            """
+            INSERT OR IGNORE INTO constancias_recordatorio (tarea_id, dia_local)
+            VALUES (?, ?)
+            """,
+            (tarea_id, dia_local),
+        )
+        return cursor.rowcount == 1
 
 
 def materia_exists(db_path: Path, materia_id: int) -> bool:

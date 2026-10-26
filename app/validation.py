@@ -1,7 +1,7 @@
 """Reglas de entrada compartidas por las rutas."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 import re
 
 LIMITE_MATERIA = 80
@@ -63,3 +63,18 @@ def validate_tarea(payload: dict) -> dict:
         "descripcion": descripcion,
         "fecha_entrega": fecha,
     }
+
+
+def validate_dia_local(value: object) -> tuple[str, str]:
+    """Valida una fecha civil y devuelve esa fecha y su día siguiente."""
+    if not isinstance(value, str) or not DATE_PATTERN.fullmatch(value):
+        raise InputError("Día local: usa una fecha real en formato AAAA-MM-DD.")
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as error:
+        raise InputError("Día local: introduce una fecha real.") from error
+    try:
+        next_day = parsed + timedelta(days=1)
+    except OverflowError as error:
+        raise InputError("Día local: no existe un día siguiente representable.") from error
+    return value, next_day.isoformat()

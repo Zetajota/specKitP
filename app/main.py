@@ -9,10 +9,12 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.db import (
-    add_materia, add_tarea, init_db, list_materias, list_tareas,
-    materia_exists, set_tarea_estado,
+    add_materia, add_tarea, init_db, list_materias, list_recordatorios, list_tareas,
+    mark_recordatorio, materia_exists, set_tarea_estado,
 )
-from app.validation import InputError, positive_id, validate_materia, validate_tarea
+from app.validation import (
+    InputError, positive_id, validate_dia_local, validate_materia, validate_tarea,
+)
 
 STATIC_DIR = Path(__file__).parent / "static"
 DEFAULT_DB = Path(__file__).parent.parent / "data" / "tareas.sqlite3"
@@ -88,6 +90,27 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         if updated is None:
             raise InputError("La tarea indicada no existe.", status_code=404)
         return updated
+
+    @application.get("/api/recordatorios")
+    def get_recordatorios(dia_local: str | None = None) -> list[dict]:
+        if dia_local is None:
+            raise InputError("Día local: el parámetro es obligatorio.")
+        local_day, due_day = validate_dia_local(dia_local)
+        return list_recordatorios(database, local_day, due_day)
+
+    @application.post("/api/recordatorios/{tarea_id}/marcar")
+    async def post_recordatorio(tarea_id: str, request: Request) -> JSONResponse:
+        if not tarea_id.isdecimal():
+            raise InputError("Tarea: debe ser un entero positivo.")
+        parsed_id = positive_id(int(tarea_id), "Tarea")
+        body = await payload_from(request)
+        if "dia_local" not in body:
+            raise InputError("Día local: el campo es obligatorio.")
+        local_day, due_day = validate_dia_local(body["dia_local"])
+        recorded = mark_recordatorio(database, parsed_id, local_day, due_day)
+        if recorded is None:
+            raise InputError("La tarea indicada no existe.", status_code=404)
+        return JSONResponse({"registrado": recorded}, status_code=201 if recorded else 200)
 
     return application
 
