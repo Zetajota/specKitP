@@ -7,6 +7,134 @@ const tareaForm = document.querySelector("#tarea-form");
 const filterMateria = document.querySelector("#filter-materia");
 const filterEstado = document.querySelector("#filter-estado");
 let classificationTimer;
+let reminderTimer;
+let reminderCheck;
+let reminderDay;
+const displayedReminders = new Set();
+
+function localDay(now = new Date()) {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function nextLocalMidnight(now = new Date()) {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
+}
+
+function tomorrowLocalDay(now = new Date()) {
+  return localDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+}
+
+function reminderList() {
+  let section = document.querySelector("#recordatorios");
+  if (!section) {
+    section = document.createElement("section");
+    section.id = "recordatorios";
+    section.setAttribute("aria-labelledby", "recordatorios-title");
+    section.setAttribute("aria-live", "polite");
+    const heading = document.createElement("h2");
+    heading.id = "recordatorios-title";
+    heading.textContent = "Recordatorios";
+    section.append(heading);
+    document.querySelector("main").insertBefore(
+      section,
+      document.querySelector("#tareas-title").closest("section"),
+    );
+  }
+  let list = section.querySelector("#recordatorios-list");
+  if (!list) {
+    list = document.createElement("ul");
+    list.id = "recordatorios-list";
+    section.append(list);
+  }
+  section.hidden = list.children.length === 0;
+  return list;
+}
+
+function clearPreviousReminders(day) {
+  if (reminderDay === day) return;
+  reminderDay = day;
+  displayedReminders.clear();
+  reminderList().replaceChildren();
+  document.querySelector("#recordatorios").hidden = true;
+}
+
+function showReminder(reminder) {
+  const list = reminderList();
+  const item = document.createElement("li");
+  item.className = "recordatorio";
+  const text = document.createElement("p");
+  text.textContent =
+    `${reminder.titulo} · ${reminder.materia} · Entrega: ${reminder.fecha_entrega}`;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Cerrar recordatorio";
+  close.setAttribute("aria-label", `Cerrar recordatorio de ${reminder.titulo}`);
+  close.addEventListener("click", () => {
+    item.remove();
+    document.querySelector("#recordatorios").hidden = list.children.length === 0;
+  });
+  item.append(text, close);
+  list.append(item);
+  document.querySelector("#recordatorios").hidden = false;
+}
+
+function scheduleReminders() {
+  clearTimeout(reminderTimer);
+  const now = new Date();
+  reminderTimer = setTimeout(() => {
+    checkReminders();
+  }, Math.max(1, nextLocalMidnight(now) - now.getTime()));
+}
+
+async function checkReminders() {
+  if (reminderCheck) return reminderCheck;
+  reminderCheck = (async () => {
+    const day = localDay();
+    clearPreviousReminders(day);
+    scheduleReminders();
+    let candidates;
+    try {
+      candidates = await api(`/api/recordatorios?dia_local=${day}`);
+    } catch (error) {
+      // La aplicación base puede ejecutarse antes de incorporar la ruta nueva.
+      if (!error.missingEndpoint) showError(error);
+      return;
+    }
+    for (const reminder of candidates) {
+      // Una respuesta tardía de ayer no debe crear avisos el día de entrega.
+      if (localDay() !== day) return;
+      if (reminder.fecha_entrega !== tomorrowLocalDay()) continue;
+      if (displayedReminders.has(reminder.tarea_id)) continue;
+      try {
+        const result = await api(
+          `/api/recordatorios/${reminder.tarea_id}/marcar`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dia_local: day }),
+          },
+        );
+        if (localDay() !== day) return;
+        if (result.registrado === true) {
+          displayedReminders.add(reminder.tarea_id);
+          showReminder(reminder);
+        }
+      } catch (error) {
+        showError(error);
+      }
+    }
+  })();
+  try {
+    await reminderCheck;
+  } finally {
+    reminderCheck = null;
+    // Si el día cambió durante la consulta, la evaluación de medianoche no se pierde.
+    if (localDay() !== reminderDay) checkReminders();
+  }
+}
 
 function deliveryDeadline(fecha) {
   const [year, month, day] = fecha.split("-").map(Number);
@@ -63,7 +191,10 @@ async function api(path, options) {
     throw new Error("La aplicación devolvió una respuesta inválida.");
   }
   if (!response.ok) {
-    throw new Error(data.error || "No se pudo completar la operación.");
+    const error = new Error(data.error || "No se pudo completar la operación.");
+    error.status = response.status;
+    error.missingEndpoint = response.status === 404 && !data.error;
+    throw error;
   }
   return data;
 }
@@ -165,6 +296,7 @@ async function refresh() {
   state.tareas = tareas;
   renderMaterias();
   renderTareas();
+  await checkReminders();
 }
 
 materiaForm.addEventListener("submit", async event => {
@@ -213,7 +345,13 @@ document.querySelector("#clear-filters").addEventListener("click", () => {
   filterEstado.value = "";
   refresh().catch(showError);
 });
-window.addEventListener("focus", renderTareas);
+window.addEventListener("focus", () => {
+  renderTareas();
+  checkReminders();
+});
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) renderTareas();
+  if (!document.hidden) {
+    renderTareas();
+    checkReminders();
+  }
 });
