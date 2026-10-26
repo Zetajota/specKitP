@@ -6,6 +6,22 @@ La aplicación de tareas base debe estar instalada y funcionando según
 [su guía](../001-organizar-tareas-academicas/quickstart.md). Las pruebas usan
 Python 3.12, pytest y Chromium de Playwright.
 
+## Línea base ejecutada por Mati (T001)
+
+El 2026-10-26 se ejecutó la suite existente, antes de implementar recordatorios,
+con Python 3.12.15 y Chromium de Playwright:
+
+```powershell
+.\.venv\runtime\Scripts\python.exe -m pytest -q
+```
+
+Resultado: **13 pruebas aprobadas**, sin fallos, en 15,10 segundos.
+Se emitió una advertencia de deprecación de Starlette por el uso de `httpx`
+en `TestClient`; no impidió ejecutar las pruebas de API y navegador.
+El entorno local de esta ejecución está en `.venv/runtime`.
+La revisión cruzada de T001 queda pendiente; este resultado no valida todavía
+la funcionalidad de recordatorios.
+
 ## Recorridos que deben probarse
 
 1. Crear una tarea pendiente con entrega mañana. Abrir la aplicación en el
