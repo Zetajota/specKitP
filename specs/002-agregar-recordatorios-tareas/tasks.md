@@ -40,7 +40,7 @@ cruzar medianoche con la página abierta.
 - [ ] T006 [US1] Añadir a `app/validation.py` validación estricta de `dia_local` como fecha civil real `AAAA-MM-DD` y cálculo del día calendario siguiente.
 - [ ] T007 [US1] Añadir a `app/db.py` consulta de tareas pendientes con entrega al día siguiente de `dia_local`, sin constancia previa, unidas al nombre de su materia y ordenadas por `tarea_id`.
 - [ ] T008 [US1] Añadir a `app/main.py` `GET /api/recordatorios` con respuesta `tarea_id`, `titulo`, `materia` y `fecha_entrega`, y rechazo en español de fecha ausente o inválida.
-- [ ] T009 [US1] Añadir a `app/static/app.js` evaluación del día local al abrir, al llegar a medianoche y al recuperar el foco; solicitar y mostrar avisos elegibles. La confirmación persistente se integra en US2.
+- [X] T009 [US1] Añadir a `app/static/app.js` evaluación del día local al abrir, al llegar a medianoche y al recuperar el foco; solicitar y mostrar avisos elegibles. La confirmación persistente se integra en US2.
 - [ ] T010 [US1] Añadir a `app/static/index.html` y `app/static/styles.css` una región de avisos legible, etiquetada, adaptable y con cierre por teclado, sin depender solo del color.
 - [ ] T011 [US1] Ejecutar y corregir las pruebas de US1 en `tests/test_api.py` y `tests/test_browser.py` hasta que pasen sin romper la suite base.
 
@@ -60,7 +60,7 @@ repetirse. Completar otra tarea antes de la emisión y comprobar que no aparece.
 
 - [ ] T014 [US2] Añadir a `app/db.py` una operación atómica que compruebe tarea pendiente, entrega mañana y unicidad `(tarea_id, dia_local)` antes de registrar la constancia; devolver si se creó o ya existía.
 - [ ] T015 [US2] Añadir a `app/main.py` `POST /api/recordatorios/{tarea_id}/marcar` con respuestas `201/200/404/422/500` y mensajes en español según `contracts/api.md`.
-- [ ] T016 [US2] Ajustar `app/static/app.js` para presentar un aviso solo tras `registrado: true`, evitar avisos tardíos, conservar el estado visual al recargar e informar fallos de registro sin afirmar éxito.
+- [X] T016 [US2] Ajustar `app/static/app.js` para presentar un aviso solo tras `registrado: true`, evitar avisos tardíos, conservar el estado visual al recargar e informar fallos de registro sin afirmar éxito.
 - [ ] T017 [US2] Ajustar `app/static/index.html` y `app/static/styles.css` para que varios avisos sean distinguibles y su control de cierre mantenga foco visible y lectura por teclado.
 - [ ] T018 [US2] Ejecutar y corregir las pruebas de US2 en `tests/test_api.py` y `tests/test_browser.py` hasta que pasen junto a US1.
 
