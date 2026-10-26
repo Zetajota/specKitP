@@ -1,0 +1,27 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; }
+body { margin: 0; background: #f5f7fb; color: #17243a; }
+main { max-width: 64rem; margin: auto; padding: 1rem; }
+button, input, select, textarea { font: inherit; }
+:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+section { background: white; border: 1px solid #d8dfeb; border-radius: .75rem; padding: 1rem; margin: 1rem 0; }
+form { display: grid; gap: .55rem; margin: 1rem 0; }
+.filters { display: grid; gap: .55rem; margin: 1rem 0; }
+label { font-weight: 650; }
+input, select, textarea { width: 100%; box-sizing: border-box; padding: .65rem; border: 1px solid #73829b; border-radius: .4rem; }
+input[type="color"] { width: 5rem; height: 3rem; padding: .2rem; }
+button { justify-self: start; padding: .65rem 1rem; border: 0; border-radius: .4rem; background: #124f99; color: white; cursor: pointer; }
+button:hover { background: #0a3972; }
+ul { list-style: none; padding: 0; }
+li { border: 1px solid #d8dfeb; border-radius: .5rem; padding: .7rem; margin: .5rem 0; }
+.task-urgente { border-left: .4rem solid #b36400; background: #fff8e9; }
+.task-vencida { border-left: .4rem solid #b02525; background: #fff1f1; }
+.task-completada { border-left: .4rem solid #2d7750; background: #eff8f2; }
+.status-badge { display: inline-block; font-weight: 700; margin-top: .25rem; }
+.color-mark { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .4rem; border: 1px solid #35415a; }
+#message:not([hidden]) { padding: .8rem; border: 1px solid #a02424; background: #fff1f1; color: #6f1717; border-radius: .4rem; }
+@media (min-width: 800px) {
+  main { padding: 2rem; }
+  form { grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr); align-items: center; }
+  form button { grid-column: 2; }
+  .filters { grid-template-columns: auto minmax(8rem, 1fr) auto minmax(8rem, 1fr) auto; align-items: center; }
+}

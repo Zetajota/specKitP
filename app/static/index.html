@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tareas académicas UPB</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Tareas académicas</h1>
+    <p>Organiza tus materias y entregas en este dispositivo.</p>
+    <div id="message" role="alert" aria-live="assertive" hidden></div>
+
+    <section aria-labelledby="materias-title">
+      <h2 id="materias-title">Materias</h2>
+      <p id="empty-materias">Aún no hay materias. Registra la primera.</p>
+      <ul id="materias-list"></ul>
+      <form id="materia-form" novalidate>
+        <label for="materia-nombre">Nombre de la materia</label>
+        <input id="materia-nombre" name="nombre" type="text" required>
+        <label for="materia-color">Color de la materia</label>
+        <input id="materia-color" name="color" type="color" value="#2255aa" required>
+        <button type="submit">Guardar materia</button>
+      </form>
+    </section>
+
+    <section aria-labelledby="tareas-title">
+      <h2 id="tareas-title">Tareas</h2>
+      <p>Las etiquetas «Urgente» y «Vencida» muestran qué entregas necesitan atención.</p>
+      <div class="filters">
+        <label for="filter-materia">Filtrar por materia</label>
+        <select id="filter-materia"><option value="">Todas las materias</option></select>
+        <label for="filter-estado">Filtrar por estado</label>
+        <select id="filter-estado">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="completada">Completada</option>
+        </select>
+        <button id="clear-filters" type="button">Limpiar filtros</button>
+      </div>
+      <form id="tarea-form" novalidate>
+        <label for="tarea-materia">Materia de la tarea</label>
+        <select id="tarea-materia" name="materia_id" required></select>
+        <label for="tarea-titulo">Título de la tarea</label>
+        <input id="tarea-titulo" name="titulo" type="text" required>
+        <label for="tarea-descripcion">Descripción opcional</label>
+        <textarea id="tarea-descripcion" name="descripcion" rows="3"></textarea>
+        <label for="tarea-fecha">Fecha de entrega</label>
+        <input id="tarea-fecha" name="fecha_entrega" type="date" required>
+        <button type="submit">Guardar tarea</button>
+      </form>
+      <p id="empty-tareas">Aún no hay tareas.</p>
+      <ul id="tareas-list"></ul>
+    </section>
+  </main>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
